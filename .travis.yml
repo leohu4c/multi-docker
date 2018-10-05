@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t leohu/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run leohu/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t leohu/multi-client  ./client
+  - docker build -t leohu/multi-nginx  ./nginx
+  - docker build -t leohu/multi-server  ./server
+  - docker build -t leohu/multi-worker  ./worker
+  # Log into the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push the to docker hub
+  - docker push leohu/multi-client
+  - docker push leohu/multi-server
+  - docker push leohu/multi-nginx
+  - docker push leohu/multi-worker
+   
